@@ -1,36 +1,77 @@
-name: Hello CI Pipeline
+name: Advanced CI Pipeline
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+  pull_request:
 
 jobs:
-  build:
+
+  lint:
+    name: Lint Code
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Get code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Setup Python
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      # Step 3: Install dependencies
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
+        run: pip install flake8
 
-      # Step 4: Run lint
-      - name: Run flake8
-        run: |
-          flake8 .
+      - name: Run lint
+        run: flake8 .
 
-      # Step 5: Run tests
+  test:
+    name: Run Tests (Matrix)
+    runs-on: ubuntu-latest
+    needs: lint   # 🔥 dependency
+
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, 3.10]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
       - name: Run tests
+        run: pytest
+
+  build:
+    name: Build Artifact
+    runs-on: ubuntu-latest
+    needs: test   # 🔥 runs only if all matrix tests pass
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create artifact
         run: |
-          pytest
+          mkdir build
+          cp -r app build/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-build
+          path: build/
