@@ -1,35 +1,36 @@
-name: Hello CI pipeline 
+name: Hello CI Pipeline
 
 on:
-    push:
-        branches:
-            - main 
-        
-jobs: 
-    build: 
-        runs-on: ubuntu-latest
+  push:
+    branches:
+      - main
 
-        steps: 
-            # get code
-            - name: Checkout code
-              uses: actions/checkout@v3
-            
-            # setup python 
-            - name: Setup python 
-              uses: actions/setup-python@v4
-              with: 
-                python-version: '3.9'
-            
-            # install dependencies
-            - name: Install Dependencies
-              run: pip install -r requirements.txt
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-            # Run lint
-            - name: Run lint
-              run: flake8 .
-            
-            # RUn test 
-            - name: Run test
-              run: pytest
-            
-            
+    steps:
+      # Step 1: Get code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Setup Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      # Step 4: Run lint
+      - name: Run flake8
+        run: |
+          flake8 .
+
+      # Step 5: Run tests
+      - name: Run tests
+        run: |
+          pytest
